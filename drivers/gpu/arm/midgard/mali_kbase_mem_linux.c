@@ -1116,6 +1116,7 @@ static struct kbase_va_region *kbase_mem_from_user_buffer(
 	long faulted_pages;
 	int zone = KBASE_REG_ZONE_CUSTOM_VA;
 	bool shared_zone = false;
+	unsigned int user_pages_flags = 0;
 
 	*va_pages = (PAGE_ALIGN(address + size) >> PAGE_SHIFT) -
 		PFN_DOWN(address);
@@ -1187,9 +1188,15 @@ static struct kbase_va_region *kbase_mem_from_user_buffer(
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 	faulted_pages = get_user_pages(current, current->mm, address, *va_pages,
 			reg->flags & KBASE_REG_GPU_WR, 0, NULL, NULL);
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
 	faulted_pages = get_user_pages(address, *va_pages,
 			reg->flags & KBASE_REG_GPU_WR, 0, NULL, NULL);
+#else
+	if (reg->flags & KBASE_REG_GPU_WR)
+		user_pages_flags |= FOLL_WRITE;
+
+	faulted_pages = get_user_pages(address, *va_pages,
+			user_pages_flags, NULL, NULL);
 #endif
 	up_read(&current->mm->mmap_sem);
 
