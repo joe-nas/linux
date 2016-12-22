@@ -495,6 +495,8 @@ config DVB_AS102_FE
 	depends on DVB_CORE
 	default DVB_AS102
 
+source "drivers/media/dvb-frontends/cxd2880/Kconfig"
+
 comment "DVB-C (cable) frontends"
 	depends on DVB_CORE
 
